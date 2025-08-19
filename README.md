@@ -107,6 +107,8 @@ src/
 npm run dev      # Start development server
 npm run build    # Build for production
 npm run preview  # Preview production build
+npm run lint     # Check code quality with ESLint
+npm run lint:fix # Auto-fix ESLint errors
 ```
 
 ## 📚 Tech Stack
@@ -119,6 +121,10 @@ npm run preview  # Preview production build
 ### UI & Styling
 - **[Lucide Vue Next](https://lucide.dev/)** - Beautiful SVG icons
 - **Custom CSS** - Dark theme inspired by GitHub
+
+### Code Quality
+- **[ESLint](https://eslint.org/)** - Code linting and formatting
+- **[eslint-plugin-vue](https://eslint.vuejs.org/)** - Vue 3 specific linting rules
 
 ### Backend & Database
 - **[Firebase](https://firebase.google.com/)** - Authentication & database
