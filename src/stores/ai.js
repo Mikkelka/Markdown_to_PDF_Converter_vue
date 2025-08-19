@@ -20,23 +20,23 @@ export const useAIStore = defineStore('ai', () => {
   // Getters
   const canPerformOperations = computed(() => {
     const authStore = useAuthStore()
-    return authStore.user && authStore.user.geminiApiKey
+    return authStore.currentUser && authStore.currentUser.geminiApiKey
   })
 
   const hasValidApiKey = computed(() => {
     const authStore = useAuthStore()
-    return authStore.user?.geminiApiKey && authStore.user.geminiApiKey.trim().length > 0
+    return authStore.currentUser?.geminiApiKey && authStore.currentUser.geminiApiKey.trim().length > 0
   })
 
   // Actions
   const initializeService = async () => {
     const authStore = useAuthStore()
-    if (!authStore.user?.geminiApiKey) {
+    if (!authStore.currentUser?.geminiApiKey) {
       throw new Error('Ingen Gemini API nøgle fundet. Tilføj din API nøgle i profilen.')
     }
 
     try {
-      geminiService.initialize(authStore.user.geminiApiKey, settings.value.model)
+      geminiService.initialize(authStore.currentUser.geminiApiKey, settings.value.model)
     } catch (err) {
       error.value = 'Fejl ved initialisering af Gemini service: ' + err.message
       throw err
@@ -139,10 +139,28 @@ export const useAIStore = defineStore('ai', () => {
       }
 
       let fullResult = ''
-      for await (const chunk of stream) {
-        const chunkText = chunk.text()
-        fullResult += chunkText
-        onChunk(chunkText, fullResult)
+      
+      // Handle the stream response correctly
+      if (stream && stream.stream) {
+        // Use the stream property
+        for await (const chunk of stream.stream) {
+          const chunkText = chunk.text()
+          fullResult += chunkText
+          onChunk(chunkText, fullResult)
+        }
+      } else if (stream && typeof stream[Symbol.asyncIterator] === 'function') {
+        // Direct async iterable
+        for await (const chunk of stream) {
+          const chunkText = chunk.text()
+          fullResult += chunkText
+          onChunk(chunkText, fullResult)
+        }
+      } else {
+        // Fallback: try to get text directly
+        const result = await stream.response
+        const text = result.text()
+        fullResult = text
+        onChunk(text, fullResult)
       }
 
       // Add to history

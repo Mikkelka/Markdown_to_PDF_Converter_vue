@@ -59,6 +59,7 @@ async function logout() {
 }
 
 function openProfileModal() {
+  if (!isLoggedIn.value) return
   showProfileModal.value = true
   closeMenus()
 }
@@ -68,6 +69,7 @@ function closeProfileModal() {
 }
 
 function openGeminiSettingsModal() {
+  if (!isLoggedIn.value) return
   showGeminiSettingsModal.value = true
   showProfileModal.value = false
   closeMenus()
@@ -203,7 +205,7 @@ document.addEventListener('click', (e) => {
     </div>
     
     <!-- Profile Modal -->
-    <div v-if="showProfileModal" class="modal-backdrop" @click="closeProfileModal">
+    <div v-if="showProfileModal && isLoggedIn" class="modal-backdrop" @click="closeProfileModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h2>Profil & Indstillinger</h2>
@@ -220,7 +222,7 @@ document.addEventListener('click', (e) => {
 
     <!-- Gemini Settings Modal -->
     <GeminiSettingsModal 
-      v-if="showGeminiSettingsModal"
+      v-if="showGeminiSettingsModal && isLoggedIn"
       @close="closeGeminiSettingsModal"
     />
   </header>

@@ -150,7 +150,7 @@ function showNotification(message, type = 'success') {
     </div>
 
     <!-- API Settings Section -->
-    <div class="profile-section">
+    <div v-if="authStore.isLoggedIn" class="profile-section">
       <h3>AI Indstillinger</h3>
       
       <div class="ai-settings-preview">

@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-toolbar">
+  <div v-if="isLoggedIn" class="ai-toolbar">
     <div class="ai-toolbar-header">
       <div class="ai-toolbar-title">
         <Sparkles class="ai-icon" :size="16" />
@@ -155,6 +155,7 @@ import {
   RotateCcw
 } from 'lucide-vue-next'
 import { useAIStore } from '../stores/ai.js'
+import { useAuthStore } from '../stores/auth.js'
 
 const props = defineProps({
   content: {
@@ -177,8 +178,9 @@ const props = defineProps({
 
 const emit = defineEmits(['content-update', 'selection-replace'])
 
-// Store
+// Stores
 const aiStore = useAIStore()
+const authStore = useAuthStore()
 
 // Local state
 const collapsed = ref(false)
@@ -186,6 +188,7 @@ const useSelection = ref(false)
 const useStreaming = ref(true)
 
 // Computed
+const isLoggedIn = computed(() => authStore.isLoggedIn)
 const isLoading = computed(() => aiStore.isLoading)
 const error = computed(() => aiStore.error)
 const currentOperation = computed(() => aiStore.currentOperation)

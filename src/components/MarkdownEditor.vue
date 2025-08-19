@@ -101,13 +101,14 @@ const handleAISelectionReplace = (newText) => {
       >
     </div>
     
-    <!-- AI Toolbar -->
+    <!-- AI Toolbar (only for logged in users) -->
     <AIToolbar
       :content="content"
       :selected-text="selectedText"
       @content-update="handleAIContentUpdate"
       @selection-replace="handleAISelectionReplace"
     />
+    
     
     <textarea
       ref="textareaRef"
