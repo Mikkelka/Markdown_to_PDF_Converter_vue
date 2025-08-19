@@ -31,8 +31,7 @@ Dette er et eksempel på markdown tekst.
 \`\`\`javascript
 console.log('Hej verden!');
 \`\`\`
-
-[Link til Anthropic](https://www.anthropic.com)`
+`
 
 // Auto-focus on title when creating new document
 watch(() => editorStore.currentDocumentId, (newId, oldId) => {
