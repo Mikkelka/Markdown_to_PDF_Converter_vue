@@ -1,5 +1,6 @@
 <script setup>
 import { computed, watch, ref } from 'vue'
+import { Sparkles } from 'lucide-vue-next'
 import { useEditorStore } from '../stores/editor.js'
 import { useAuthStore } from '../stores/auth.js'
 import AIToolbar from './AIToolbar.vue'
@@ -10,6 +11,7 @@ const authStore = useAuthStore()
 // Local state for AI integration
 const textareaRef = ref(null)
 const selectedText = ref('')
+const aiToolbarVisible = ref(false)
 
 // Computed properties
 const title = computed({
@@ -91,18 +93,30 @@ const handleAISelectionReplace = (newText) => {
   <div class="editor-panel">
     <div class="panel-header">
       <h2>Markdown Input</h2>
-      <input
-        id="documentTitle"
-        v-model="title"
-        type="text"
-        placeholder="Dokument titel..."
-        class="document-title-input"
-        :disabled="!authStore.isLoggedIn"
-      >
+      <div class="title-input-container">
+        <input
+          id="documentTitle"
+          v-model="title"
+          type="text"
+          placeholder="Dokument titel..."
+          class="document-title-input"
+          :disabled="!authStore.isLoggedIn"
+        >
+        <button 
+          v-if="authStore.isLoggedIn" 
+          @click="aiToolbarVisible = !aiToolbarVisible"
+          class="ai-toggle-btn"
+          :class="{ 'active': aiToolbarVisible }"
+          title="Toggle AI Assistent"
+        >
+          <Sparkles :size="16" />
+        </button>
+      </div>
     </div>
     
-    <!-- AI Toolbar (only for logged in users) -->
+    <!-- AI Toolbar (only for logged in users and when visible) -->
     <AIToolbar
+      v-if="authStore.isLoggedIn && aiToolbarVisible"
       :content="content"
       :selected-text="selectedText"
       @content-update="handleAIContentUpdate"
@@ -143,6 +157,13 @@ const handleAISelectionReplace = (newText) => {
   gap: 1rem;
 }
 
+.title-input-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
 .panel-header h2 {
   font-size: 1rem;
   margin: 0;
@@ -175,6 +196,35 @@ const handleAISelectionReplace = (newText) => {
   background: #161B22;
   color: #8B949E;
   cursor: not-allowed;
+}
+
+.ai-toggle-btn {
+  background: #21262D;
+  border: 1px solid #30363D;
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: #8B949E;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ai-toggle-btn:hover {
+  background: #30363D;
+  color: #F0F6FC;
+}
+
+.ai-toggle-btn.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: white;
+}
+
+.ai-toggle-btn.active:hover {
+  background: #5855eb;
 }
 
 .document-title-input::placeholder {

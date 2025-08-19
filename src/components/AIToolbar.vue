@@ -1,21 +1,6 @@
 <template>
   <div v-if="isLoggedIn" class="ai-toolbar">
-    <div class="ai-toolbar-header">
-      <div class="ai-toolbar-title">
-        <Sparkles class="ai-icon" :size="16" />
-        <span>AI Assistent</span>
-      </div>
-      <button 
-        @click="collapsed = !collapsed"
-        class="ai-collapse-btn"
-        :class="{ 'collapsed': collapsed }"
-      >
-        <ChevronDown :size="16" />
-      </button>
-    </div>
-
-    <transition name="ai-toolbar-content">
-      <div v-if="!collapsed" class="ai-toolbar-content">
+    <div class="ai-toolbar-content">
         <!-- Action Buttons -->
         <div class="ai-actions">
           <button 
@@ -74,14 +59,6 @@
             />
             <span>Kun markeret tekst ({{ selectionLength }} tegn)</span>
           </label>
-
-          <label class="ai-option">
-            <input 
-              type="checkbox" 
-              v-model="useStreaming"
-            />
-            <span>Streaming svar</span>
-          </label>
         </div>
 
         <!-- Error Display -->
@@ -108,35 +85,19 @@
           </button>
         </div>
 
-        <!-- Operation History -->
-        <div v-if="operationHistory.length > 0" class="ai-history">
-          <h4>Seneste AI operationer</h4>
-          <div class="history-list">
-            <div 
-              v-for="operation in operationHistory.slice(0, 3)" 
-              :key="operation.id"
-              class="history-item"
-              :class="{ 'failed': operation.status === 'failed' }"
-            >
-              <div class="history-info">
-                <span class="history-type">{{ getOperationDisplayName(operation.type) }}</span>
-                <span class="history-time">{{ formatTime(operation.timestamp) }}</span>
-              </div>
-              <div class="history-actions">
-                <button 
-                  @click="undoOperation(operation)"
-                  :disabled="isLoading"
-                  class="history-btn"
-                  title="Fortryd denne operation"
-                >
-                  <RotateCcw :size="14" />
-                </button>
-              </div>
-            </div>
-          </div>
+        <!-- Undo -->
+        <div v-if="hasOriginalContent" class="ai-undo">
+          <button 
+            @click="undoToOriginal"
+            :disabled="isLoading"
+            class="ai-undo-btn"
+            title="Fortryd til original tekst"
+          >
+            <RotateCcw :size="16" />
+            <span>Fortryd til original</span>
+          </button>
         </div>
       </div>
-    </transition>
   </div>
 </template>
 
@@ -148,7 +109,6 @@ import {
   List, 
   Hash, 
   Lightbulb, 
-  ChevronDown, 
   AlertCircle, 
   AlertTriangle, 
   X,
@@ -183,9 +143,9 @@ const aiStore = useAIStore()
 const authStore = useAuthStore()
 
 // Local state
-const collapsed = ref(false)
 const useSelection = ref(false)
-const useStreaming = ref(true)
+const originalContent = ref('')
+const originalSelection = ref('')
 
 // Computed
 const isLoggedIn = computed(() => authStore.isLoggedIn)
@@ -194,7 +154,14 @@ const error = computed(() => aiStore.error)
 const currentOperation = computed(() => aiStore.currentOperation)
 const hasValidApiKey = computed(() => aiStore.hasValidApiKey)
 const canUseAI = computed(() => aiStore.canPerformOperations)
-const operationHistory = computed(() => aiStore.operationHistory)
+
+const hasOriginalContent = computed(() => {
+  if (useSelection.value) {
+    return originalSelection.value !== '' && originalSelection.value !== props.selectedText
+  } else {
+    return originalContent.value !== '' && originalContent.value !== props.content
+  }
+})
 
 const hasSelection = computed(() => props.selectedText && props.selectedText.trim().length > 0)
 const selectionLength = computed(() => props.selectedText ? props.selectedText.length : 0)
@@ -216,24 +183,21 @@ const performAction = async (actionType) => {
     return
   }
 
-  try {
-    if (useStreaming.value && actionType === 'improve') {
-      await performStreamingAction(actionType, textToProcess)
-    } else {
-      await performRegularAction(actionType, textToProcess)
+  // Store original content before AI operation (only if not already stored)
+  if (useSelection.value && hasSelection.value) {
+    if (!originalSelection.value) {
+      originalSelection.value = props.selectedText
     }
+  } else {
+    if (!originalContent.value) {
+      originalContent.value = props.content
+    }
+  }
+
+  try {
+    await performStreamingAction(actionType, textToProcess)
   } catch (err) {
     console.error('AI operation failed:', err)
-  }
-}
-
-const performRegularAction = async (actionType, text) => {
-  const result = await aiStore.performOperation(actionType, text)
-  
-  if (useSelection.value && hasSelection.value) {
-    emit('selection-replace', result)
-  } else {
-    emit('content-update', result)
   }
 }
 
@@ -273,46 +237,33 @@ const getOperationText = (operation) => {
   return operations[operation] || 'Behandler...'
 }
 
-const getOperationDisplayName = (operation) => {
-  const operations = {
-    improve: 'Forbedret tekst',
-    summarize: 'Sammenfatning',
-    outline: 'Outline',
-    convert: 'Markdown konvertering',
-    suggestions: 'Forslag'
-  }
-  return operations[operation] || operation
-}
-
-const formatTime = (timestamp) => {
-  const now = new Date()
-  const diff = now - new Date(timestamp)
-  const minutes = Math.floor(diff / 60000)
-  
-  if (minutes < 1) return 'Nu'
-  if (minutes < 60) return `${minutes}m siden`
-  
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}t siden`
-  
-  return new Date(timestamp).toLocaleDateString('da-DK')
-}
-
-const undoOperation = (operation) => {
-  if (operation.originalText !== undefined) {
-    if (useSelection.value && hasSelection.value) {
-      emit('selection-replace', operation.originalText)
-    } else {
-      emit('content-update', operation.originalText)
-    }
+const undoToOriginal = () => {
+  if (useSelection.value && originalSelection.value) {
+    emit('selection-replace', originalSelection.value)
+    // Bevar originalSelection indtil næste AI operation
+  } else if (originalContent.value) {
+    emit('content-update', originalContent.value)
+    // Bevar originalContent indtil næste AI operation
   }
 }
 
 // Auto-adjust useSelection based on selection
 const updateSelectionOption = () => {
+  const oldUseSelection = useSelection.value
   if (!hasSelection.value) {
     useSelection.value = false
   }
+  
+  // Reset original values if switching between selection modes
+  if (oldUseSelection !== useSelection.value) {
+    resetOriginalValues()
+  }
+}
+
+// Reset original values when content changes significantly
+const resetOriginalValues = () => {
+  originalContent.value = ''
+  originalSelection.value = ''
 }
 
 // Watch for selection changes
@@ -329,73 +280,20 @@ onMounted(() => {
     clearInterval(selectionInterval)
   })
 })
+
+// Expose reset function for parent component
+defineExpose({
+  resetOriginalValues
+})
 </script>
 
 <style scoped>
 .ai-toolbar {
-  background: var(--bg-color, #f8f9fa);
-  border: 1px solid var(--border-color, #e9ecef);
+  background: #161B22;
+  border: 1px solid #30363D;
   border-radius: 8px;
   margin-bottom: 1rem;
   overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.ai-toolbar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: var(--header-bg, #fff);
-  border-bottom: 1px solid var(--border-color, #e9ecef);
-  cursor: pointer;
-}
-
-.ai-toolbar-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  color: var(--text-color, #333);
-}
-
-.ai-icon {
-  color: #6366f1;
-}
-
-.ai-collapse-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.ai-collapse-btn:hover {
-  background: var(--hover-bg, #f1f3f4);
-}
-
-.ai-collapse-btn.collapsed {
-  transform: rotate(-90deg);
-}
-
-.ai-toolbar-content-enter-active,
-.ai-toolbar-content-leave-active {
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.ai-toolbar-content-enter-from,
-.ai-toolbar-content-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.ai-toolbar-content-enter-to,
-.ai-toolbar-content-leave-from {
-  max-height: 500px;
-  opacity: 1;
 }
 
 .ai-toolbar-content {
@@ -414,9 +312,9 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-color, #e9ecef);
-  background: var(--btn-bg, #fff);
-  color: var(--text-color, #333);
+  border: 1px solid #30363D;
+  background: #21262D;
+  color: #E6EDF3;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -424,8 +322,8 @@ onMounted(() => {
 }
 
 .ai-btn:hover:not(:disabled) {
-  background: var(--btn-hover-bg, #f8f9fa);
-  border-color: var(--btn-hover-border, #6366f1);
+  background: #30363D;
+  border-color: #6366f1;
 }
 
 .ai-btn:disabled {
@@ -449,7 +347,7 @@ onMounted(() => {
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color, #e9ecef);
+  border-top: 1px solid #30363D;
 }
 
 .ai-option {
@@ -457,7 +355,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--text-color, #666);
+  color: #8B949E;
   cursor: pointer;
 }
 
@@ -533,98 +431,39 @@ onMounted(() => {
   }
 }
 
-.ai-history {
+.ai-undo {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--border-color, #e9ecef);
+  border-top: 1px solid #30363D;
 }
 
-.ai-history h4 {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-color, #666);
-  margin: 0 0 0.75rem 0;
-}
-
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.history-item {
+.ai-undo-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem;
-  background: var(--history-bg, #f8f9fa);
-  border: 1px solid var(--border-color, #e9ecef);
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
-
-.history-item.failed {
-  background: #fef2f2;
-  border-color: #fecaca;
-}
-
-.history-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.history-type {
-  font-weight: 500;
-  color: var(--text-color, #333);
-}
-
-.history-time {
-  color: var(--text-color, #666);
-  font-size: 0.75rem;
-}
-
-.history-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.history-btn {
-  background: none;
-  border: 1px solid var(--border-color, #e9ecef);
-  border-radius: 4px;
-  padding: 0.25rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #30363D;
+  background: #21262D;
+  color: #E6EDF3;
+  border-radius: 6px;
   cursor: pointer;
-  color: var(--text-color, #666);
   transition: all 0.2s ease;
+  font-size: 0.875rem;
+  width: 100%;
+  justify-content: center;
 }
 
-.history-btn:hover:not(:disabled) {
-  background: var(--btn-hover-bg, #f1f3f4);
-  border-color: var(--btn-hover-border, #6366f1);
-  color: var(--btn-hover-color, #6366f1);
+.ai-undo-btn:hover:not(:disabled) {
+  background: #30363D;
+  border-color: #f97316;
+  color: #f97316;
 }
 
-.history-btn:disabled {
+.ai-undo-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Dark theme support */
-@media (prefers-color-scheme: dark) {
-  .ai-toolbar {
-    --bg-color: #1f2937;
-    --header-bg: #374151;
-    --border-color: #4b5563;
-    --text-color: #f9fafb;
-    --btn-bg: #374151;
-    --btn-hover-bg: #4b5563;
-    --btn-hover-border: #818cf8;
-    --hover-bg: #4b5563;
-    --history-bg: #374151;
-    --btn-hover-color: #818cf8;
-  }
-}
 
 /* Mobile responsive */
 @media (max-width: 768px) {

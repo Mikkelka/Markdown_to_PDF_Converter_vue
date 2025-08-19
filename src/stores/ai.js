@@ -69,24 +69,40 @@ export const useAIStore = defineStore('ai', () => {
         thinkingBudget: settings.value.thinkingBudget
       }
       
+      let stream
       switch (operationType) {
         case 'improve':
-          result = await geminiService.improveWriting(text, serviceOptions)
+          stream = await geminiService.improveWriting(text, serviceOptions)
           break
         case 'summarize':
-          result = await geminiService.summarizeContent(text, serviceOptions)
+          stream = await geminiService.summarizeContent(text, serviceOptions)
           break
         case 'outline':
-          result = await geminiService.generateOutline(text, serviceOptions)
+          stream = await geminiService.generateOutline(text, serviceOptions)
           break
         case 'convert':
-          result = await geminiService.convertToMarkdown(text, serviceOptions)
+          stream = await geminiService.convertToMarkdown(text, serviceOptions)
           break
         case 'suggestions':
-          result = await geminiService.getWritingSuggestions(text, serviceOptions)
+          stream = await geminiService.getWritingSuggestions(text, serviceOptions)
           break
         default:
           throw new Error('Ukendt operation: ' + operationType)
+      }
+
+      // Convert stream to full result
+      result = ''
+      if (stream && stream.stream) {
+        for await (const chunk of stream.stream) {
+          result += chunk.text()
+        }
+      } else if (stream && typeof stream[Symbol.asyncIterator] === 'function') {
+        for await (const chunk of stream) {
+          result += chunk.text()
+        }
+      } else {
+        const response = await stream.response
+        result = response.text()
       }
 
       operation.result = result
@@ -132,7 +148,19 @@ export const useAIStore = defineStore('ai', () => {
       let stream
       switch (operationType) {
         case 'improve':
-          stream = await geminiService.improveWritingStream(text, serviceOptions)
+          stream = await geminiService.improveWriting(text, serviceOptions)
+          break
+        case 'summarize':
+          stream = await geminiService.summarizeContent(text, serviceOptions)
+          break
+        case 'outline':
+          stream = await geminiService.generateOutline(text, serviceOptions)
+          break
+        case 'convert':
+          stream = await geminiService.convertToMarkdown(text, serviceOptions)
+          break
+        case 'suggestions':
+          stream = await geminiService.getWritingSuggestions(text, serviceOptions)
           break
         default:
           throw new Error('Streaming ikke understøttet for: ' + operationType)
