@@ -4,6 +4,7 @@ import { User, Settings, LogOut, ChevronDown, X } from 'lucide-vue-next'
 import { useAuthStore } from '../stores/auth.js'
 import { useEditorStore } from '../stores/editor.js'
 import ProfileModal from './ProfileModal.vue'
+import GeminiSettingsModal from './GeminiSettingsModal.vue'
 
 const authStore = useAuthStore()
 const editorStore = useEditorStore()
@@ -12,6 +13,7 @@ const editorStore = useEditorStore()
 const showLoginMenu = ref(false)
 const showUserMenu = ref(false)
 const showProfileModal = ref(false)
+const showGeminiSettingsModal = ref(false)
 
 // Computed properties
 const isLoggedIn = computed(() => authStore.isLoggedIn)
@@ -63,6 +65,20 @@ function openProfileModal() {
 
 function closeProfileModal() {
   showProfileModal.value = false
+}
+
+function openGeminiSettingsModal() {
+  showGeminiSettingsModal.value = true
+  showProfileModal.value = false
+  closeMenus()
+}
+
+function closeGeminiSettingsModal() {
+  showGeminiSettingsModal.value = false
+}
+
+function handleOpenGeminiSettings() {
+  openGeminiSettingsModal()
 }
 
 // Notification helpers
@@ -195,9 +211,18 @@ document.addEventListener('click', (e) => {
             <X :size="20" />
           </button>
         </div>
-        <ProfileModal @close="closeProfileModal" />
+        <ProfileModal 
+          @close="closeProfileModal" 
+          @open-gemini-settings="handleOpenGeminiSettings"
+        />
       </div>
     </div>
+
+    <!-- Gemini Settings Modal -->
+    <GeminiSettingsModal 
+      v-if="showGeminiSettingsModal"
+      @close="closeGeminiSettingsModal"
+    />
   </header>
 </template>
 

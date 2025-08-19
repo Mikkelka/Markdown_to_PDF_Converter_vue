@@ -1,10 +1,15 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { useEditorStore } from '../stores/editor.js'
 import { useAuthStore } from '../stores/auth.js'
+import AIToolbar from './AIToolbar.vue'
 
 const editorStore = useEditorStore()
 const authStore = useAuthStore()
+
+// Local state for AI integration
+const textareaRef = ref(null)
+const selectedText = ref('')
 
 // Computed properties
 const title = computed({
@@ -45,6 +50,41 @@ watch(() => editorStore.currentDocumentId, (newId, oldId) => {
     }, 100)
   }
 })
+
+// AI Integration Methods
+const updateSelectedText = () => {
+  if (textareaRef.value) {
+    const textarea = textareaRef.value
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    selectedText.value = textarea.value.substring(start, end)
+  }
+}
+
+const handleAIContentUpdate = (newContent) => {
+  content.value = newContent
+}
+
+const handleAISelectionReplace = (newText) => {
+  if (textareaRef.value && selectedText.value) {
+    const textarea = textareaRef.value
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const currentContent = content.value
+    
+    const beforeSelection = currentContent.substring(0, start)
+    const afterSelection = currentContent.substring(end)
+    
+    content.value = beforeSelection + newText + afterSelection
+    
+    // Update cursor position
+    setTimeout(() => {
+      const newCursorPos = start + newText.length
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+      textarea.focus()
+    }, 0)
+  }
+}
 </script>
 
 <template>
@@ -60,12 +100,25 @@ watch(() => editorStore.currentDocumentId, (newId, oldId) => {
         :disabled="!authStore.isLoggedIn"
       >
     </div>
+    
+    <!-- AI Toolbar -->
+    <AIToolbar
+      :content="content"
+      :selected-text="selectedText"
+      @content-update="handleAIContentUpdate"
+      @selection-replace="handleAISelectionReplace"
+    />
+    
     <textarea
+      ref="textareaRef"
       v-model="content"
       :placeholder="placeholderText"
       class="markdown-textarea"
       :disabled="!authStore.isLoggedIn"
       spellcheck="false"
+      @select="updateSelectedText"
+      @mouseup="updateSelectedText"
+      @keyup="updateSelectedText"
     ></textarea>
   </div>
 </template>
