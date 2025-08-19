@@ -7,7 +7,7 @@ import ProfileModal from './ProfileModal.vue'
 import GeminiSettingsModal from './GeminiSettingsModal.vue'
 
 const authStore = useAuthStore()
-const editorStore = useEditorStore()
+const _editorStore = useEditorStore()
 
 // Local state
 const showLoginMenu = ref(false)
@@ -53,7 +53,7 @@ async function logout() {
     await authStore.logout()
     closeMenus()
     showSuccess('Du er nu logget ud')
-  } catch (error) {
+  } catch {
     showError('Logout fejlede')
   }
 }

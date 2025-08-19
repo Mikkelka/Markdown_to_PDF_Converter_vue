@@ -29,7 +29,7 @@ async function downloadPdf() {
   
   try {
     await generatePDF(renderedHtml.value, editorStore.title || 'markdown-dokument')
-  } catch (error) {
+  } catch {
     showError('Der opstod en fejl ved PDF generering. Prøv igen.')
   }
 }

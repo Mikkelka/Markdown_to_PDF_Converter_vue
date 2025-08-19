@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from './stores/auth.js'
 import { useDocumentsStore } from './stores/documents.js'
 import { useEditorStore } from './stores/editor.js'
@@ -37,16 +37,16 @@ onUnmounted(() => {
 
 // Handle auth state changes
 authStore.$subscribe(async (mutation, state) => {
-  console.log('Auth state changed:', state.isLoggedIn, state.isInitialized)
+  console.warn('Auth state changed:', state.isLoggedIn, state.isInitialized)
   
   if (state.isLoggedIn && state.isInitialized && state.currentUser) {
     // User logged in with user data available
-    console.log('User logged in, loading documents...')
+    console.warn('User logged in, loading documents...')
     await documentsStore.loadDocuments()
     editorStore.newDocument()
   } else if (!state.isLoggedIn && state.isInitialized) {
     // User logged out
-    console.log('User logged out, clearing documents...')
+    console.warn('User logged out, clearing documents...')
     documentsStore.clearDocuments()
     editorStore.newDocument()
   }

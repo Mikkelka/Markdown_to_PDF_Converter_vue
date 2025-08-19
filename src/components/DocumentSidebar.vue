@@ -23,7 +23,7 @@ async function refreshDocuments() {
   try {
     await documentsStore.loadDocuments()
     showSuccess('Dokumenter genindlæst!')
-  } catch (error) {
+  } catch {
     showError('Kunne ikke genindlæse dokumenter')
   }
 }
@@ -51,7 +51,7 @@ async function deleteDocument(documentId) {
     try {
       await documentsStore.deleteDocument(documentId)
       showSuccess('Dokument slettet!')
-    } catch (error) {
+    } catch {
       showError('Kunne ikke slette dokument')
     }
   }

@@ -26,7 +26,7 @@ export const useDocumentsStore = defineStore('documents', () => {
     const authStore = useAuthStore()
     
     if (!authStore.isLoggedIn || !authStore.currentUser) {
-      console.log('User not logged in or user data not available, clearing documents')
+      console.warn('User not logged in or user data not available, clearing documents')
       documents.value = {}
       return
     }
@@ -34,21 +34,21 @@ export const useDocumentsStore = defineStore('documents', () => {
     loading.value = true
     
     try {
-      console.log('Loading documents for user:', authStore.currentUser.id)
+      console.warn('Loading documents for user:', authStore.currentUser.id)
       
       // Try Firestore first
       try {
         const firestoreDocs = await documentService.getUserDocuments(authStore.currentUser.id)
         documents.value = firestoreDocs
         lastSync.value = new Date()
-        console.log(`✅ Loaded ${Object.keys(firestoreDocs).length} documents from Firestore`)
+        console.warn(`✅ Loaded ${Object.keys(firestoreDocs).length} documents from Firestore`)
       } catch (firestoreError) {
         console.warn('⚠️  Firestore failed, falling back to localStorage:', firestoreError)
         
         // Fallback to localStorage
         const localDocs = localStorageService.getUserDocuments(authStore.currentUser.id)
         documents.value = localDocs
-        console.log(`📁 Loaded ${Object.keys(localDocs).length} documents from localStorage`)
+        console.warn(`📁 Loaded ${Object.keys(localDocs).length} documents from localStorage`)
       }
       
     } catch (error) {
@@ -102,7 +102,7 @@ export const useDocumentsStore = defineStore('documents', () => {
         
         // Update local cache
         documents.value[documentId] = documentToSave
-        console.log('Document saved to Firestore')
+        console.warn('Document saved to Firestore')
         
         return documentId
       } catch (firestoreError) {
@@ -117,7 +117,7 @@ export const useDocumentsStore = defineStore('documents', () => {
         
         // Update local cache
         documents.value[documentId] = documentToSave
-        console.log('Document saved to localStorage')
+        console.warn('Document saved to localStorage')
         
         return documentId
       }
@@ -139,13 +139,13 @@ export const useDocumentsStore = defineStore('documents', () => {
       // Try Firestore first
       try {
         await documentService.deleteDocument(documentId)
-        console.log('Document deleted from Firestore')
+        console.warn('Document deleted from Firestore')
       } catch (firestoreError) {
         console.warn('Firestore delete failed, falling back to localStorage:', firestoreError)
         
         // Fallback to localStorage
         localStorageService.deleteDocument(documentId, authStore.currentUser.id)
-        console.log('Document deleted from localStorage')
+        console.warn('Document deleted from localStorage')
       }
       
       // Remove from local cache
@@ -175,7 +175,7 @@ export const useDocumentsStore = defineStore('documents', () => {
 
     try {
       await saveDocument(document)
-      console.log('Auto-save successful')
+      console.warn('Auto-save successful')
     } catch (error) {
       console.warn('Auto-save failed:', error)
     }

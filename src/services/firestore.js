@@ -21,7 +21,7 @@ export const documentService = {
     }
     
     try {
-      console.log('Loading documents for user:', userId)
+      console.warn('Loading documents for user:', userId)
       
       const documentsQuery = query(
         collection(db, 'documents'),
@@ -32,7 +32,7 @@ export const documentService = {
       const snapshot = await getDocs(documentsQuery)
       const documents = {}
       
-      console.log('Found', snapshot.docs.length, 'documents in Firestore')
+      console.warn('Found', snapshot.docs.length, 'documents in Firestore')
       
       snapshot.docs.forEach(doc => {
         documents[doc.id] = {

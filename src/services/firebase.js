@@ -30,7 +30,7 @@ if (isValidConfig) {
     const app = initializeApp(firebaseConfig)
     auth = getAuth(app)
     db = getFirestore(app)
-    console.log('🔥 Firebase initialized successfully with real config')
+    console.warn('🔥 Firebase initialized successfully with real config')
   } catch (error) {
     console.error('❌ Firebase initialization failed:', error)
     auth = null

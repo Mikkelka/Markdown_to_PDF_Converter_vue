@@ -65,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const result = await getRedirectResult(auth)
       if (result && result.user) {
-        console.log('User returned from Google redirect')
+        console.warn('User returned from Google redirect')
         // User data will be handled by onAuthStateChanged
       }
     } catch (error) {

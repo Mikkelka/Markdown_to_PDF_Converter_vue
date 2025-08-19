@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/auth.js'
 import { useAIStore } from '../stores/ai.js'
 
 const authStore = useAuthStore()
-const aiStore = useAIStore()
+const _aiStore = useAIStore()
 
 // Props and emits
 defineProps({
@@ -19,7 +19,7 @@ const emit = defineEmits(['close', 'open-gemini-settings'])
 // Local state
 const profileName = ref('')
 const profileEmail = ref('')
-const isVisible = ref(false)
+const _isVisible = ref(false)
 
 // Computed properties
 const currentUser = computed(() => authStore.currentUser)
@@ -64,7 +64,7 @@ async function deleteAccount() {
   }
 }
 
-function closeModal() {
+function _closeModal() {
   emit('close')
 }
 
