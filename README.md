@@ -18,6 +18,9 @@ En moderne Vue 3 webapplikation til at skrive markdown og eksportere til PDF med
 - 🌙 **Dark Theme** - Elegant mørkt tema inspireret af GitHub
 - 🎨 **Lucide Icons** - Moderne SVG ikoner
 - 📡 **Offline Support** - localStorage fallback
+- 🤖 **AI Integration** - Google Gemini AI til forbedring af markdown
+- ⚡ **AI Toolbar** - Opsummer, forklar, forkort og forbedre tekst
+- 🔧 **AI Settings** - Konfigurerbar Gemini API nøgle og model
 
 ## 🚀 Quick Start
 
@@ -81,8 +84,10 @@ npm run dev
 ```
 src/
 ├── components/           # Vue komponenter
-│   ├── AuthHeader.vue   # Login/logout header
+│   ├── AIToolbar.vue        # AI funktioner toolbar
+│   ├── AuthHeader.vue       # Login/logout header
 │   ├── DocumentSidebar.vue  # Dokumentliste
+│   ├── GeminiSettingsModal.vue # AI indstillinger
 │   ├── MarkdownEditor.vue   # Markdown input
 │   ├── PreviewPanel.vue     # Live preview + PDF export
 │   └── ProfileModal.vue     # Brugerindstillinger
@@ -93,6 +98,7 @@ src/
 │   ├── firebase.js     # Firebase config
 │   └── firestore.js    # Database operations
 ├── stores/             # Pinia state management
+│   ├── ai.js           # AI/Gemini state
 │   ├── auth.js         # Authentication state
 │   ├── documents.js    # Document management
 │   └── editor.js       # Editor state
@@ -135,6 +141,11 @@ npm run lint:fix # Auto-fix ESLint errors
 - **[markdown-it](https://github.com/markdown-it/markdown-it)** - Markdown parser
 - **[html2pdf.js](https://github.com/eKoopmans/html2pdf.js)** - PDF generation
 
+### AI Integration
+- **[Google Generative AI](https://ai.google.dev/)** - Gemini AI integration
+- **AI Toolbar** - Opsummer, forklar, forkort og forbedre tekst
+- **Konfigurerbar API** - Brugerdefineret Gemini API nøgle
+
 ## 🎯 Core Features
 
 ### 📝 Markdown Editor
@@ -160,6 +171,14 @@ npm run lint:fix # Auto-fix ESLint errors
 - Print-optimized styling
 - A4 format
 - High-quality rendering
+
+### 🤖 AI Features
+- **Opsummer** - Lav kort sammendrag af tekst
+- **Forklar** - Få detaljerede forklaringer
+- **Forkort** - Gør tekst mere koncis
+- **Forbedre** - Enhance tone og klarhed
+- **Gemini API** - Konfigurerbar AI integration
+- **Model Selection** - Vælg mellem forskellige Gemini modeller
 
 ## 🌐 Browser Support
 
